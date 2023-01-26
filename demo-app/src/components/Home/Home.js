@@ -28,9 +28,16 @@ function Home() {
         return <div>Loading</div>
     } else {
         return (
-            <div className={"container"} >
+            <div>
                 Home
-                {postList.map(post => (<Post title={post.title} text={post.text} ></Post>))}
+                {postList.map(post => (<Post
+                    title={post.title}
+                    text={post.text}
+                    userId={post.userDto.id}
+                    firstName={post.userDto.firstName}
+                    lastName={post.userDto.lastName}
+                    email={post.userDto.email}
+                ></Post>))}
             </div>
         )
     }
