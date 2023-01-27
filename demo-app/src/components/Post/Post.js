@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 
 import { styled } from '@mui/material/styles';
 import Card from '@mui/material/Card';
@@ -15,10 +15,12 @@ import ShareIcon from '@mui/icons-material/Share';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {Link} from "react-router-dom";
+import {Container} from "@mui/material";
+import Comment from "../Comment/Comment"
 
 function Post(props) {
 
-    const {title, text, userId, firstName, lastName, email} = props;
+    const {postId, title, text, userId, firstName} = props;
 
     const ExpandMore = styled((props) => {
         const { expand, ...other } = props;
@@ -31,16 +33,43 @@ function Post(props) {
         }),
     }));
 
-        const [expanded, setExpanded] = React.useState(false);
-        const [liked, setLike] = useState(false);
+    const [expanded, setExpanded] = React.useState(false);
+    const [liked, setLike] = useState(false);
+    const [error, setError] = useState(null);
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [commentList, setCommentList] = useState([]);
+    const isInitialMount = useRef(true);
 
     const handleExpandClick = () => {
             setExpanded(!expanded);
+            refreshComments();
         };
 
         const handleLike = () => {
             setLike(!liked)
         }
+
+    const refreshComments = () => {
+        fetch("/comment?postId=" + postId)
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    setIsLoaded(true)
+                    setCommentList(result)
+                } ,
+                (error) => {
+                    setIsLoaded(true)
+                    setError((error))
+                }
+            )
+    }
+
+    useEffect(() => {
+        if (isInitialMount.current)
+            isInitialMount.current = false
+        else
+            refreshComments()
+    }, [commentList])
 
     return (
         <Card sx={{ maxWidth: 345 }}>
@@ -63,8 +92,6 @@ function Post(props) {
                 <Typography variant="body2" color="text.secondary">
                     {text}
                     {firstName}
-                    {lastName}
-                    {email}
                 </Typography>
             </CardContent>
             <CardActions disableSpacing>
@@ -86,6 +113,14 @@ function Post(props) {
                 </ExpandMore>
             </CardActions>
             <Collapse in={expanded} timeout="auto" unmountOnExit>
+                <Container>
+                    {error ? "error" :
+                        isLoaded ? commentList.map(comment => (
+                            <Comment userId={userId} userName={firstName} text={comment.text}>
+                            </Comment>
+                        )) : "Loading"
+                    }
+                </Container>
             </Collapse>
         </Card>
     )
